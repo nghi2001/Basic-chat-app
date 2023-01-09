@@ -1,0 +1,11 @@
+CREATE TABLE public.bad_words (
+    id integer NOT NULL,
+    word character varying(255) DEFAULT 1,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    logs jsonb,
+    status integer,
+    creator_id integer,
+    creator_info jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
