@@ -1,4 +1,4 @@
-# trungnguyen-crm-api
+# basic-chat-app
 
 ### Requirement
 trungnguyen-crm-api requires Node >= 16.16.0 or higher.
