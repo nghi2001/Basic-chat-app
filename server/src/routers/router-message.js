@@ -1,9 +1,15 @@
 import Route from 'koa-router';
 import Message from '../models/mongo/message';
 import Room from '../models/mongo/room';
-import {verifyToken} from '../middlewares/jwt-verify';
-import { renderErr} from './helper';
-import { renderCondition } from '../controllers/message';
+import {
+    verifyToken
+} from '../middlewares/jwt-verify';
+import {
+    renderErr
+} from './helper';
+import {
+    renderCondition
+} from '../controllers/message';
 import SocketService from '../services/socket';
 
 const route = new Route();
@@ -11,7 +17,7 @@ const route = new Route();
 route.get("/v1/message", verifyToken, async (ctx, next) => {
     let idUser = ctx.state.user.id;
     let condition = await renderCondition(ctx.query);
-    if(ctx.query.room_id) {
+    if (ctx.query.room_id) {
         let room = await Room.findOne({
             id: ctx.query.room_id,
             members: {
@@ -20,13 +26,13 @@ route.get("/v1/message", verifyToken, async (ctx, next) => {
                 }
             }
         })
-        if(!room) {
+        if (!room) {
             return renderErr("Get List Message", ctx, 403, "room_id");
         }
     } else {
         return ctx.body = []
     }
-    let data = await Message.find(condition).populate("user_id","_id name");
+    let data = await Message.find(condition).populate("user_id", "_id name");
     ctx.body = data;
 })
 route.post("/v1/message", verifyToken, async (ctx, next) => {
@@ -36,7 +42,7 @@ route.post("/v1/message", verifyToken, async (ctx, next) => {
         message
     } = ctx.request.body;
     let room = await Room.findById(room_id);
-    if(!room) {
+    if (!room) {
         return renderErr("create message", ctx, 404, "room_id");
     }
     let newMessage = await Message.create({
@@ -49,8 +55,19 @@ route.post("/v1/message", verifyToken, async (ctx, next) => {
     ctx.body = data
 })
 
-route.delete("/v1/message/:id", verifyToken, async (ctx, next) => {
-    let result = await Message.deleteOne({_id: ctx.params.id});
-    return result
+route.put("/v1/message/:id", verifyToken, async (ctx, next) => {
+    let {
+        room_id
+    } = ctx.request.body;
+    let message = await Message.findById(ctx.params.id)
+    if (!message) {
+        return renderErr("Delete Message", ctx, 404, "id")
+    }
+    await Message.deleteOne({
+        _id: ctx.params.id
+    });
+    SocketService.deleteMessage(message, room_id)
+
+    ctx.body = message;
 })
 export default route
