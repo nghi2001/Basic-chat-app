@@ -5,12 +5,16 @@ import { useState } from 'react';
 import axios from 'axios';
 import config from '../../config/config.json';
 import SideBar from '../side-bar';
+import { Navigate } from 'react-router-dom';
 export default () => {
     const name = useRef("");
     const [searchMember, setSearchMember] = useState("");
     const [members, setMembers] = useState([]);
     const [membersPinked, setPicked] = useState([]);
-
+    let token = localStorage.getItem("accessToken");
+    if (!token) {
+        return <Navigate to={"/login"} />
+    }
     useEffect(() => {
         let token = localStorage.getItem("accessToken")
         axios.get(`${config.url}/v1/users`, {

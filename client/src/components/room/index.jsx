@@ -24,14 +24,15 @@ const RoomComponent = () => {
                 console.log(data);
                 setLisRoom(data.data)
             })
-        console.log(userInfo);
 
         socket.on("new-message", (data) => {
             console.log(data.room_id !== roomId && data.user_id._id !== userInfo.id);
+            console.log(data);
             if (data.room_id !== roomId && data.user_id._id !== userInfo.id) {
                 return toast({
                     colorScheme: 'pink.100',
-                    title: "You have new message",
+                    title: data.user_id.name,
+                    description: data.message,
                     duration: 1000,
                     position: 'bottom-right',
                     status: "info"

@@ -1,3 +1,17 @@
+body, html {
+    min-width: 100vh;
+    min-height: 100vh;
+}
 #chat-box::-webkit-scrollbar {
     display: none;
+}
+#chat-box {
+    overflow: scroll !important;
+}
+
+.mess-btn{
+    /* padding: 0 !important; */
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50% 50% !important;
 }

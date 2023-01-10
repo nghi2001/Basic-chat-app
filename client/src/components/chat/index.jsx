@@ -13,7 +13,6 @@ import SideBar from "../side-bar";
 export default () => {
     let token = localStorage.getItem("accessToken");
     if (!token) {
-        console.log("-------------------------------------------NGHI-------------");
         return <Navigate to={"/login"} />
     }
     return (

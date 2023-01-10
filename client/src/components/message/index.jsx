@@ -1,11 +1,11 @@
 import { useSelector } from "react-redux"
-import { Box, Flex, Input, Icon, Text, Button, background } from '@chakra-ui/react'
-import { useEffect } from "react"
+import { Box, Flex, Input, Icon, Text, Button, Menu, MenuList, MenuItem, MenuButton, useToast } from '@chakra-ui/react'
 import axios from "axios"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import config from '../../config/config.json';
 import { socket } from '../../socket';
-import { useRef } from "react"
+import { DragHandleIcon } from "@chakra-ui/icons"
+
 
 export default () => {
     const roomId = useSelector((state) => state.RoomReducer.value);
@@ -13,6 +13,8 @@ export default () => {
     let userId = JSON.parse(localStorage.getItem("user_info"));
     userId = userId.id
     let [messages, setMessage] = useState([])
+    let toast = useToast();
+
     useEffect(() => {
         if (roomId) {
             let token = localStorage.getItem("accessToken");
@@ -42,8 +44,35 @@ export default () => {
         message.current.value = ""
         setMessage([...messages, result.data])
     }
+    const deleteMess = async (id) => {
+        try {
+            let result = await axios.put(`${config.url}/v1/message/${id}`, {
+                room_id: roomId
+            }, {
+                headers: {
+                    Authorization: "Bearer " + localStorage.getItem("accessToken")
+                }
+            });
+            messages = messages.filter(mes => mes._id != id)
+            return setMessage(messages)
+        } catch (error) {
+            console.log(error);
+            toast({
+                title: "Can't delete message",
+                status: "error"
+            })
+        }
+    }
+    socket.on("del-message", (data) => {
+        if (data.room_id == roomId) {
+            messages = messages.filter(mes => mes._id != data._id)
+            return setMessage(messages)
+        }
+    })
     socket.on("new-message", (data) => {
-        setMessage([...messages, data])
+        if (data.room_id == roomId) {
+            setMessage([...messages, data])
+        }
     })
     return (
 
@@ -57,10 +86,26 @@ export default () => {
                 }} id="chat-box">
                     {messages.map((message) => (
 
-                        <>
+                        <Flex key={message._id} alignItems="center" alignSelf={message.user_id._id == userId ? "flex-end" : "flex-start"}>
+                            <Menu>
+                                <MenuButton
+                                    background="transparent"
+                                    // width="10px"
+                                    // height="10px"
+                                    className="mess-btn"
+                                ><DragHandleIcon />
+                                </MenuButton>
+                                <MenuList background={"transparent"}>
+                                    <MenuItem
+                                        background={"transparent"}
+                                        onClick={() => deleteMess(message._id)}
+                                    >Delete</MenuItem>
+                                </MenuList>
+                            </Menu>
                             {(message.user_id._id == userId) ?
-                                <Box key={message._id} alignSelf="flex-end">
-                                    <Text fontSize={"15"} fontStyle="italic" textAlign={"right"}>{message.user_id.name}</Text>
+
+                                <Box key={message._id}>
+                                    <Text fontSize={"15"} fontStyle="italic" marginTop={"5px"} textAlign={"right"}>{message.user_id.name}</Text>
                                     <Text
                                         padding={2}
                                         minHeight={"40px"} minWidth="200px" maxWidth="400px" borderRadius={"10px 0px 10px 10px"} background={"rgba(88,81,220,255)"}
@@ -74,7 +119,8 @@ export default () => {
                                     >{message.message}</Text>
                                 </Box>}
 
-                        </>
+
+                        </Flex>
                     ))}
                 </Box>
                 <Box height={"10%"} style={{
@@ -107,7 +153,7 @@ export default () => {
 
 
                 </Box>
-            </Flex>
-        </Box>
+            </Flex >
+        </Box >
     )
 }
